@@ -30,3 +30,5 @@ run from inside the bot. Because of this, the plugins need to adhere to the foll
 * Port some plugins
 * Alias support
 * Endpoint for incoming irc messages
+* Make bot configurable via cfg file and cli arguments
+* Find something for triggers (eg, !remind, leaving messages for ppl)
