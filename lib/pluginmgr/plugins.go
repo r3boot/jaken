@@ -50,6 +50,9 @@ func (pm *PluginManager) LoadPlugins() {
 		}
 
 		name := strings.Split(path.Base(fs.Name()), ".")[0]
+		if strings.Contains(name, "_") {
+			name = strings.Join(strings.Split(name, "_")[1:], "_")
+		}
 		path := fmt.Sprintf("%s/%s", pm.params.PluginPath, fs.Name())
 
 		newPlugins[name] = path
@@ -79,4 +82,42 @@ func (pm *PluginManager) Run(command, params string) string {
 	}
 
 	return string(out)
+}
+
+func (pm *PluginManager) GetRole(command string) string {
+	pm.LoadPlugins()
+	fname := pm.GetPlugin(command)
+	if fname == "" {
+		return ""
+	}
+
+	if strings.Contains(fname, "_") {
+		return strings.Split(fname, "_")[0]
+	} else {
+		return command
+	}
+}
+
+func (pm *PluginManager) GetRoles() []string {
+	var roles []string
+
+	files, err := ioutil.ReadDir(pm.params.PluginPath)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to read pluginmgr from %s", pm.params.PluginPath))
+	}
+
+	for _, fs := range files {
+		if fs.IsDir() {
+			continue
+		}
+
+		role := strings.Split(path.Base(fs.Name()), ".")[0]
+		if strings.Contains(role, "_") {
+			role = strings.Join(strings.Split(role, "_")[1:], "_")
+		}
+
+		roles = append(roles, role)
+	}
+
+	return roles
 }

@@ -8,7 +8,53 @@ import (
 )
 
 const (
-	initializeTableSql = `CREATE TABLE IF NOT EXISTS users (hostmask varchar[64] not null primary key, nickname varchar[64]);`
+	initializeTableSql = `
+CREATE TABLE IF NOT EXISTS nicknames (
+    nickname varchar
+);
+
+CREATE TABLE IF NOT EXISTS hostmasks (
+    hostmask varchar,
+    nickname_id integer,
+    FOREIGN KEY (nickname_id) REFERENCES nicknames(rowid)
+		ON DELETE CASCADE
+		ON UPDATE NO ACTION
+);
+
+CREATE TABLE IF NOT EXISTS roles (
+    name varchar not null
+);
+
+CREATE TABLE IF NOT EXISTS permissions (
+    nickname_id integer,
+    role_id integer,
+    FOREIGN KEY (nickname_id) REFERENCES nicknames (rowid)
+		ON DELETE CASCADE
+		ON UPDATE NO ACTION,
+    FOREIGN KEY (role_id) REFERENCES roles (rowid) 
+		ON DELETE CASCADE 
+		ON UPDATE NO ACTION
+);
+
+CREATE TABLE IF NOT EXISTS bindings (
+    command varchar,
+	role_id integer,
+	FOREIGN KEY (role_id) REFERENCES roles(rowid)
+		ON DELETE CASCADE
+    	ON UPDATE NO ACTION
+);
+
+DELETE FROM roles WHERE name = 'admin';
+INSERT INTO roles VALUES ('admin');
+
+DELETE FROM bindings WHERE role_id = 1;
+INSERT INTO bindings VALUES
+	('meet', 1),
+	('forget', 1),
+	('role', 1),
+    ('perm', 1),
+	('binding', 1);
+`
 )
 
 type State struct {
@@ -39,88 +85,4 @@ func New(fname string) (*State, error) {
 
 func (s *State) Close() {
 	s.db.Close()
-}
-
-func (s *State) HasNickname(requestedNickname string) bool {
-	var nickname string
-	sql := "SELECT nickname FROM users WHERE nickname = ? LIMIT 1"
-
-	statement, err := s.db.Prepare(sql)
-	if err != nil {
-		log.Fatalf("db.Prepare: %v", err)
-	}
-	defer statement.Close()
-
-	err = statement.QueryRow(requestedNickname).Scan(&nickname)
-	switch {
-	case nickname == requestedNickname:
-		return true
-	case err.Error() == "sql: no rows in result set":
-		return false
-	case err != nil:
-		log.Fatalf("statement.QueryRow: %v", err)
-	}
-
-	return false
-}
-
-func (s *State) HasHostmask(requestedHostmask string) bool {
-	var hostmask string
-	sql := "SELECT hostmask FROM users WHERE hostmask = ? LIMIT 1"
-
-	statement, err := s.db.Prepare(sql)
-	if err != nil {
-		log.Fatalf("db.Prepare: %v", err)
-	}
-	defer statement.Close()
-
-	err = statement.QueryRow(requestedHostmask).Scan(&hostmask)
-	switch {
-	case hostmask == requestedHostmask:
-		return true
-	case err.Error() == "sql: no rows in result set":
-		return false
-	case err != nil:
-		log.Fatalf("statement.QueryRow: %v", err)
-	}
-
-	return false
-}
-
-func (s *State) AddUser(nickname, hostmask string) {
-	sql := "INSERT INTO users VALUES (?, ?)"
-
-	statement, err := s.db.Prepare(sql)
-	if err != nil {
-		log.Fatalf("db.Prepare: %v", err)
-	}
-	defer statement.Close()
-
-	err = statement.QueryRow(hostmask, nickname).Scan()
-	switch {
-	case err.Error() == "sql: no rows in result set":
-	case err != nil:
-		{
-			log.Fatalf("statement.QueryRow: %v", err)
-		}
-	}
-}
-
-func (s *State) RemoveUser(nickname string) {
-	sql := "DELETE FROM users WHERE nickname = ?"
-
-	statement, err := s.db.Prepare(sql)
-	if err != nil {
-		log.Fatalf("db.Prepare: %v", err)
-	}
-	defer statement.Close()
-
-	err = statement.QueryRow(nickname).Scan()
-	switch {
-	case err.Error() == "sql: no rows in result set":
-	case err != nil:
-		{
-			log.Fatalf("statement.QueryRow: %v", err)
-		}
-	}
 }

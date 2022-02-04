@@ -6,7 +6,6 @@ import (
 	ircevent "github.com/thoj/go-ircevent"
 	"jaken/lib/ircstate"
 	"jaken/lib/pluginmgr"
-	"log"
 	"regexp"
 	"strings"
 )
@@ -14,9 +13,15 @@ import (
 const (
 	PRIVMSG = "PRIVMSG"
 
-	cmdWhoAmI = "whoami"
-	cmdMeet   = "meet"
-	cmdForget = "forget"
+	cmdWhoAmI     = "whoami"
+	cmdMeet       = "meet"
+	cmdForget     = "forget"
+	cmdAddRole    = "add-role"
+	cmdRemoveRole = "del-role"
+	cmdListRoles  = "list-roles"
+	cmdAddPerm    = "add-perm"
+	cmdDelPerm    = "del-perm"
+	cmdListPerms  = "list-perms"
 )
 
 type Params struct {
@@ -70,22 +75,6 @@ func (bot *IrcBot) Run() {
 	bot.conn.Loop()
 }
 
-func (bot *IrcBot) AddHostmask(nickname string) {
-	bot.conn.AddCallback("311", func(e *ircevent.Event) {
-		go func(e *ircevent.Event) {
-			if len(e.Arguments) != 6 {
-				log.Fatalf("whois reply: not enough arguments\n")
-			}
-
-			hostmask := fmt.Sprintf("%s!%s@%s", e.Arguments[1], e.Arguments[2], e.Arguments[3])
-			bot.state.AddUser(nickname, hostmask)
-			bot.conn.RemoveCallback("311", 0)
-		}(e)
-	})
-
-	bot.conn.Whois(nickname)
-}
-
 func (bot *IrcBot) PrivMsg(e *ircevent.Event) {
 	if len(e.Arguments) != 2 {
 		return
@@ -127,17 +116,19 @@ func (bot *IrcBot) PrivMsg(e *ircevent.Event) {
 		bot.Meet(channel, source, params)
 	case cmdForget:
 		bot.Forget(channel, source, params)
+	case cmdAddRole:
+		bot.AddRole(channel, source, params)
+	case cmdRemoveRole:
+		bot.RemoveRole(channel, source, params)
+	case cmdListRoles:
+		bot.ListRoles(channel, source)
+	case cmdAddPerm:
+		bot.AddPerm(channel, source, params)
+	case cmdDelPerm:
+		bot.DeletePerm(channel, source, params)
+	case cmdListPerms:
+		bot.ListPerms(channel, source, params)
 	default:
 		bot.RunPlugin(channel, source, command, params)
 	}
-}
-
-func (bot *IrcBot) RunPlugin(channel, caller, command, params string) {
-	if !bot.state.HasHostmask(caller) {
-		bot.conn.Privmsgf(channel, "I dont know you")
-		return
-	}
-
-	response := bot.plugins.Run(command, params)
-	bot.conn.Privmsg(channel, response)
 }

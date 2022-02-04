@@ -26,7 +26,7 @@ func main() {
 		Channel:       "#bottest",
 		Nickname:      "jaken",
 		Realname:      "Jaken",
-		CommandPrefix: "1",
+		CommandPrefix: "!",
 		Owner:         "r3boot!~r3boot@cloaked",
 	}, state, plugins)
 	if err != nil {
