@@ -20,14 +20,14 @@ func main() {
 	defer state.Close()
 
 	bot, err := ircbot.New(&ircbot.Params{
-		Server:        "irc.oftc.net:6697",
+		Server:        "irc.mononoke.nl:6697",
 		UseTLS:        true,
 		VerifyTLS:     false,
-		Channel:       "#nurdbottest",
+		Channel:       "#bottest",
 		Nickname:      "jaken",
 		Realname:      "Jaken",
-		CommandPrefix: "@",
-		Owner:         "r3boot!~r3boot@shell.as65342.net",
+		CommandPrefix: "1",
+		Owner:         "r3boot!~r3boot@cloaked",
 	}, state, plugins)
 	if err != nil {
 		panic(err)
