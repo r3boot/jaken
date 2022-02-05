@@ -20,6 +20,15 @@ func (bot *IrcBot) WhoAmI(channel, caller, nickname string) {
 	}
 }
 
+func (bot *IrcBot) Test(channel, caller, nickname string) {
+	if !bot.IsAuthorized(caller, "test") {
+		bot.conn.Privmsgf(channel, "Not authorized to run command")
+		return
+	}
+
+	bot.conn.Privmsgf(channel, "So thats, like, just your test %s", nickname)
+}
+
 func (bot *IrcBot) Meet(channel, caller, nickname string) {
 	if !bot.IsAuthorized(caller, "meet") {
 		bot.conn.Privmsgf(channel, "Not authorized to run command")

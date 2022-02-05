@@ -16,6 +16,7 @@ const (
 	cmdWhoAmI     = "whoami"
 	cmdMeet       = "meet"
 	cmdForget     = "forget"
+	cmdTest       = "test"
 	cmdAddRole    = "add-role"
 	cmdRemoveRole = "del-role"
 	cmdListRoles  = "list-roles"
@@ -112,6 +113,8 @@ func (bot *IrcBot) PrivMsg(e *ircevent.Event) {
 	switch command {
 	case cmdWhoAmI:
 		bot.WhoAmI(channel, source, nickname)
+	case cmdTest:
+		bot.Test(channel, source, nickname)
 	case cmdMeet:
 		bot.Meet(channel, source, params)
 	case cmdForget:
