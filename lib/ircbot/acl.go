@@ -2,6 +2,25 @@ package ircbot
 
 import "fmt"
 
+var (
+	adminCommands = []string{
+		cmdMeet,
+		cmdForget,
+		cmdAddRole,
+		cmdRemoveRole,
+		cmdListRoles,
+		cmdAddPerm,
+		cmdDelPerm,
+		cmdListPerms,
+	}
+	alwaysCommands = []string{
+		cmdHelp,
+		cmdTest,
+		cmdCommands,
+		cmdWhoAmI,
+	}
+)
+
 func (bot *IrcBot) IsOwner(hostmask string) bool {
 	return bot.params.Owner == hostmask
 }
@@ -34,4 +53,36 @@ func (bot *IrcBot) IsAuthorized(hostmask, command string) bool {
 	// Disallow by default
 	fmt.Printf("Denied %s to %s: unknown error", command, hostmask)
 	return false
+}
+
+func (bot *IrcBot) GetAuthorizedCommands(hostmask string) []string {
+	var commands []string
+
+	commands = append(commands, alwaysCommands...)
+
+	if bot.IsOwner(hostmask) {
+		commands = append(commands, adminCommands...)
+		commands = append(commands, bot.plugins.ListPlugins()...)
+	} else {
+		nickname := bot.state.GetNicknameForHostmask(hostmask)
+		if nickname == "" {
+			return nil
+		}
+
+		roles := bot.plugins.GetRoles()
+
+		for _, perm := range bot.state.ListPermissions(nickname) {
+			if perm == "admin" {
+				commands = append(commands, adminCommands...)
+				continue
+			}
+			for _, role := range roles {
+				if role == perm {
+					commands = append(commands, bot.plugins.ListCommandsForRole(role)...)
+				}
+			}
+		}
+	}
+
+	return commands
 }

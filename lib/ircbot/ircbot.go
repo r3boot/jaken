@@ -17,6 +17,8 @@ const (
 	cmdMeet       = "meet"
 	cmdForget     = "forget"
 	cmdTest       = "test"
+	cmdHelp       = "help"
+	cmdCommands   = "commands"
 	cmdAddRole    = "add-role"
 	cmdRemoveRole = "del-role"
 	cmdListRoles  = "list-roles"
@@ -41,6 +43,7 @@ type IrcBot struct {
 	params  *Params
 	state   *ircstate.State
 	plugins *pluginmgr.PluginManager
+	builtIn []string
 }
 
 var (
@@ -115,6 +118,10 @@ func (bot *IrcBot) PrivMsg(e *ircevent.Event) {
 		bot.WhoAmI(channel, source, nickname)
 	case cmdTest:
 		bot.Test(channel, source, nickname)
+	case cmdHelp:
+		bot.Help(channel, source)
+	case cmdCommands:
+		bot.Commands(channel, source)
 	case cmdMeet:
 		bot.Meet(channel, source, params)
 	case cmdForget:

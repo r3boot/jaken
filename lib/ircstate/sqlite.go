@@ -50,6 +50,8 @@ INSERT INTO roles VALUES ('admin');
 DELETE FROM bindings WHERE role_id = 1;
 INSERT INTO bindings VALUES
     ('test', 1),
+    ('commands', 1),
+    ('help', 1),
 	('meet', 1),
 	('forget', 1),
 	('role', 1),

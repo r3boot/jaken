@@ -29,6 +29,26 @@ func (bot *IrcBot) Test(channel, caller, nickname string) {
 	bot.conn.Privmsgf(channel, "So thats, like, just your test %s", nickname)
 }
 
+func (bot *IrcBot) Help(channel, caller string) {
+	if !bot.IsAuthorized(caller, "help") {
+		bot.conn.Privmsgf(channel, "Not authorized to run command")
+		return
+	}
+
+	bot.conn.Privmsgf(channel, "See !commands ")
+}
+
+func (bot *IrcBot) Commands(channel, caller string) {
+	if !bot.IsAuthorized(caller, "commands") {
+		bot.conn.Privmsgf(channel, "Not authorized to run command")
+		return
+	}
+
+	commands := bot.GetAuthorizedCommands(caller)
+	formattedCommands := strings.Join(commands, ", ")
+	bot.conn.Privmsgf(channel, "Available commands: %s", formattedCommands)
+}
+
 func (bot *IrcBot) Meet(channel, caller, nickname string) {
 	if !bot.IsAuthorized(caller, "meet") {
 		bot.conn.Privmsgf(channel, "Not authorized to run command")
@@ -77,7 +97,7 @@ func (bot *IrcBot) AddRole(channel, caller, role string) {
 	}
 
 	if role == "" {
-		bot.conn.Privmsgf(channel, "Need a role name")
+		bot.conn.Privmsgf(channel, "Usage: %s <role>", cmdAddRole)
 		return
 	}
 
@@ -102,7 +122,7 @@ func (bot *IrcBot) RemoveRole(channel, caller, role string) {
 	}
 
 	if role == "" {
-		bot.conn.Privmsgf(channel, "Need a role name")
+		bot.conn.Privmsgf(channel, "Usage: %s <role>", cmdRemoveRole)
 		return
 	}
 
@@ -192,7 +212,7 @@ func (bot *IrcBot) DeletePerm(channel, caller, params string) {
 	}
 
 	if params == "" || strings.Count(params, " ") != 1 {
-		bot.conn.Privmsgf(channel, "Usage: %s <nickname> <role>", cmdAddPerm)
+		bot.conn.Privmsgf(channel, "Usage: %s <nickname> <role>", cmdDelPerm)
 		return
 	}
 

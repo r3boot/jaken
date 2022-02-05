@@ -121,3 +121,41 @@ func (pm *PluginManager) GetRoles() []string {
 
 	return roles
 }
+
+func (pm *PluginManager) ListPlugins() []string {
+	var plugins []string
+
+	pm.LoadPlugins()
+
+	for plugin, _ := range pm.plugins {
+		plugins = append(plugins, plugin)
+	}
+
+	return plugins
+}
+
+func (pm *PluginManager) ListCommandsForRole(role string) []string {
+	var commands []string
+	files, err := ioutil.ReadDir(pm.params.PluginPath)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to read pluginmgr from %s", pm.params.PluginPath))
+	}
+
+	for _, fs := range files {
+		if fs.IsDir() {
+			continue
+		}
+
+		name := strings.Split(path.Base(fs.Name()), ".")[0]
+
+		if strings.HasPrefix(name, role) {
+			if strings.Contains(name, "_") {
+				commands = append(commands, strings.Join(strings.Split(name, "_")[1:], "_"))
+			} else {
+				commands = append(commands, name)
+			}
+		}
+	}
+
+	return commands
+}

@@ -18,6 +18,12 @@ Display how you are recognized by the bot. Syntax is `whoami`.
 ## test
 Test if you can talk with the bot. Syntax is `test`
 
+## help
+Get some info to get you started. Syntax is `help`
+
+## commands
+List all available commands. Syntax is `help`
+
 ## meet
 Introduce a new user to the bot. Syntax is `meet <nickname>`. This will cause the bot to perform a whois lookup for this
 user, and store the corresponding hostmask into the database
