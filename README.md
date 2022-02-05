@@ -16,17 +16,18 @@ In order to make the bot work, it includes several commands by itself, a list of
 Display how you are recognized by the bot. Syntax is `whoami`.
 
 ## test
-Test if you can talk with the bot. Syntax is `test`
+Test if you can talk with the bot. Syntax is `test`.
 
 ## help
-Get some info to get you started. Syntax is `help`
+Get some info to get you started. Syntax is `help`.
 
 ## commands
-List all available commands. Syntax is `help`
+List all commands that are available to you. Syntax is `help`. Note that you will only see commands which you have
+access to.
 
 ## meet
 Introduce a new user to the bot. Syntax is `meet <nickname>`. This will cause the bot to perform a whois lookup for this
-user, and store the corresponding hostmask into the database
+user, and store the corresponding hostmask into the database.
 
 ## forget
 Remove a user from the bot. Syntax is `forget <nickname>`. This will delete all hostmasks of users matching the nickname.
@@ -35,16 +36,16 @@ Remove a user from the bot. Syntax is `forget <nickname>`. This will delete all 
 Define a new role. Syntax is `add-role <role>`.
 
 ## del-role
-Remove a role. Syntax is `del-role <role>`
+Remove a role. Syntax is `del-role <role>`.
 
 ## list-roles
-List all available roles. Syntax is `list-roles`
+List all available roles. Syntax is `list-roles`.
 
 ## add-perm
-Grants a user permission to a role. Syntax is `add-perm <nickname> <role>`
+Grants a user permission to a role. Syntax is `add-perm <nickname> <role>`.
 
 ## del-perm
-Revokes a permission from a user. Syntax is `del-perm <nickname> <role>`
+Revokes a permission from a user. Syntax is `del-perm <nickname> <role>`.
 
 ## list-perms
 List all roles for a user. Syntax is `list-perms [<nickname>]`. By default the permissions for the calling user will
@@ -57,16 +58,21 @@ Because of this, the plugins need to adhere to the following rules:
 
 * Filename must be a single word and can optionally have an extension
 * Incoming arguments to the plugins must be set via argv
-* Replies to the bot need to be sent to stdout
+* Plugin output goes to stdout
 
-By default, the command is bound to a role with the same name as the command. This can be overriden by prepending the
+By default, the command is bound to a role with the same name as the command. This can be overridden by prepending the
 filename of the command with `<role name>_`. This role identifier (including the underscore) will be removed from the
 IRC command.
 
+Some contextual information will be passed to the command via environment variables. The following can be used within
+your plugin:
+* IRC_CHANNEL
+* IRC_HOSTMASK
+* IRC_NICKNAME
+
 # Upcoming features
-* Additional information passing to plugins
 * karma/infoitems, in-bot or not
-* Possibility to reply via notifications
+* Possibility to reply using notifications
 * Port some plugins
 * Alias support
 * Endpoint for incoming irc messages

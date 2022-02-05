@@ -139,6 +139,6 @@ func (bot *IrcBot) PrivMsg(e *ircevent.Event) {
 	case cmdListPerms:
 		bot.ListPerms(channel, source, params)
 	default:
-		bot.RunPlugin(channel, source, command, params)
+		bot.RunPlugin(channel, source, nickname, command, params)
 	}
 }

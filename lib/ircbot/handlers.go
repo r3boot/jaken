@@ -2,13 +2,13 @@ package ircbot
 
 import "strings"
 
-func (bot *IrcBot) RunPlugin(channel, caller, command, params string) {
+func (bot *IrcBot) RunPlugin(channel, caller, nickname, command, params string) {
 	role := bot.plugins.GetRole(command)
 	if !bot.IsAuthorized(caller, role) {
 		bot.conn.Privmsgf(channel, "Not authorized to run command")
 		return
 	}
-	response := bot.plugins.Run(command, params)
+	response := bot.plugins.Run(command, params, channel, caller, nickname)
 	bot.conn.Privmsg(channel, response)
 }
 

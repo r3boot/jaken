@@ -69,14 +69,20 @@ func (pm *PluginManager) GetPlugin(command string) string {
 	return fname
 }
 
-func (pm *PluginManager) Run(command, params string) string {
+func (pm *PluginManager) Run(command, params, channel, caller, nickname string) string {
 	pm.LoadPlugins()
 	fname := pm.GetPlugin(command)
 	if fname == "" {
 		return "No such command"
 	}
 
-	out, err := exec.Command(fname, params).Output()
+	cmd := exec.Command(fname, params)
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, fmt.Sprintf("IRC_CHANNEL=%s", channel))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("IRC_HOSTMASK=%s", caller))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("IRC_NICKNAME=%s", nickname))
+
+	out, err := cmd.Output()
 	if err != nil {
 		return err.Error()
 	}
