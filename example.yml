@@ -1,0 +1,10 @@
+server: "localhost:6667"
+use_tls: false
+verify_tls: true
+channel: "#example"
+nickname: "ircbot"
+realname: "ircbot"
+owner: ""
+command_prefix: "!"
+dbpath: "./jaken.db"
+pluginPath: "./plugins"

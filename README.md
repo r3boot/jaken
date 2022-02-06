@@ -3,6 +3,24 @@ This bot is based on the premise of a loosely coupling between the bot and its p
 be made more easily. It does this by assuming that plugins are standalone binaries that can be executed. The second
 premise is that there needs to be a fine-grained ACL mechanism. This is done with roles applied to plugins.
 
+# Configuration
+The configuration settings for this bot can be set in three different ways: commandline arguments, environment variables
+and yaml-based configuration. The precedence is environment > commandline > yaml. The following options are available:
+
+|yaml|argument|envvar| description                         |default value|
+|----|--------|------|-------------------------------------|-------------|
+|server|-server|IRCBOT_SERVER| Which server to connect to |localhost:6667|
+|use_tls|-usetls|IRCBOT_USETLS| Use TLS to connect to the server | false |
+|verify_tls|-verifytls|IRCBOT_VERIFYTLS| Verify TLS server certificate |true|
+|channel|-channel|IRCBOT_CHANNEL| Default channel to join |#example |
+|nickname|-nickname|IRCBOT_NICKNAME| Nickname to use |ircbot|   
+|realname|-realname|IRCBOT_REALNAME|Realname to use |ircbot|
+|owner|-owner|IRCBOT_OWNER|Hostmask of the owner |unset|
+|command_prefix|-commandprefix|IRCBOT_COMMANDPREFIX|Commandprefix to use |!|
+|db_path|-dbpath|IRCBOT_DBPATH|Path to the database |./jaken.db|
+|plugin_path|-pluginpath|IRCBOT_PLUGINPATH|Path to the plugins|./plugins|
+
+
 # Access control
 This bot features fine-grained RBAC with a command-level granularity. Every command can be bound to a role, and users
 can get permissions per role. By default, this works on the command level, but it is possible to bind multiple commands

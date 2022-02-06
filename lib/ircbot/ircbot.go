@@ -62,7 +62,10 @@ func New(params *Params, state *ircstate.State, plugins *pluginmgr.PluginManager
 	ircBot.conn.VerboseCallbackHandler = true
 	ircBot.conn.Debug = true
 	ircBot.conn.UseTLS = params.UseTLS
-	ircBot.conn.TLSConfig = &tls.Config{InsecureSkipVerify: !params.VerifyTLS}
+	ircBot.conn.TLSConfig = &tls.Config{
+		ServerName:         strings.Split(params.Server, ":")[0],
+		InsecureSkipVerify: !params.VerifyTLS,
+	}
 
 	err := ircBot.conn.Connect(params.Server)
 	if err != nil {
