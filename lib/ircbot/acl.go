@@ -62,26 +62,29 @@ func (bot *IrcBot) GetAuthorizedCommands(hostmask string) []string {
 
 	if bot.IsOwner(hostmask) {
 		commands = append(commands, adminCommands...)
-		commands = append(commands, bot.plugins.ListPlugins()...)
+		// commands = append(commands, bot.plugins.ListPlugins()...)
 	} else {
 		nickname := bot.state.GetNicknameForHostmask(hostmask)
 		if nickname == "" {
 			return nil
 		}
 
-		roles := bot.plugins.GetRoles()
+		/*
+			roles := bot.plugins.GetRoles()
 
-		for _, perm := range bot.state.ListPermissions(nickname) {
-			if perm == "admin" {
-				commands = append(commands, adminCommands...)
-				continue
-			}
-			for _, role := range roles {
-				if role == perm {
-					commands = append(commands, bot.plugins.ListCommandsForRole(role)...)
+			for _, perm := range bot.state.ListPermissions(nickname) {
+				if perm == "admin" {
+					commands = append(commands, adminCommands...)
+					continue
+				}
+				for _, role := range roles {
+					if role == perm {
+						commands = append(commands, bot.plugins.ListCommandsForRole(role)...)
+					}
 				}
 			}
-		}
+
+		*/
 	}
 
 	return commands

@@ -2,10 +2,11 @@ package main
 
 import (
 	"flag"
+	"jaken/lib/broker"
+	"jaken/lib/common"
 	"jaken/lib/config"
 	"jaken/lib/ircbot"
 	"jaken/lib/ircstate"
-	"jaken/lib/pluginmgr"
 )
 
 func main() {
@@ -38,8 +39,14 @@ func main() {
 		PluginPath:    *flagPluginPath,
 	})
 
-	plugins := pluginmgr.New(&pluginmgr.PluginParams{
-		PluginPath: settings.PluginPath,
+	unfilteredChan := make(chan common.ToMessage, broker.MaxInFlight)
+	commandChan := make(chan common.ToMessage, broker.MaxInFlight)
+
+	mqtt := broker.New(&broker.Params{
+		Server:         "localhost:1883",
+		ClientId:       settings.Nickname,
+		UnfilteredChan: unfilteredChan,
+		CommandChan:    commandChan,
 	})
 
 	state, err := ircstate.New(settings.DbPath)
@@ -49,15 +56,17 @@ func main() {
 	}
 
 	bot, err := ircbot.New(&ircbot.Params{
-		Server:        settings.Server,
-		UseTLS:        settings.UseTls,
-		VerifyTLS:     settings.VerifyTls,
-		Channel:       settings.Channel,
-		Nickname:      settings.Nickname,
-		Realname:      settings.Realname,
-		CommandPrefix: settings.CommandPrefix,
-		Owner:         settings.Owner,
-	}, state, plugins)
+		Server:            settings.Server,
+		UseTLS:            settings.UseTls,
+		VerifyTLS:         settings.VerifyTls,
+		Channel:           settings.Channel,
+		Nickname:          settings.Nickname,
+		Realname:          settings.Realname,
+		CommandPrefix:     settings.CommandPrefix,
+		Owner:             settings.Owner,
+		UnfilteredChannel: unfilteredChan,
+		CommandChannel:    commandChan,
+	}, state, mqtt)
 	if err != nil {
 		panic(err)
 	}

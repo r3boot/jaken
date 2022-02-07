@@ -1,15 +1,22 @@
 package ircbot
 
-import "strings"
+import (
+	"fmt"
+	"jaken/lib/common"
+	"strings"
+)
 
-func (bot *IrcBot) RunPlugin(channel, caller, nickname, command, params string) {
-	role := bot.plugins.GetRole(command)
-	if !bot.IsAuthorized(caller, role) {
-		bot.conn.Privmsgf(channel, "Not authorized to run command")
-		return
+func (bot *IrcBot) SubmitCommand(channel, hostmask, nickname, command string) {
+	msg := common.ToMessage{
+		Channel:  channel,
+		Hostmask: hostmask,
+		Nickname: nickname,
+		Message:  command,
 	}
-	response := bot.plugins.Run(command, params, channel, caller, nickname)
-	bot.conn.Privmsg(channel, response)
+
+	// Submit message to command topic
+	fmt.Printf("Submit to command topic: %v\n", msg)
+	bot.commandChannel <- msg
 }
 
 func (bot *IrcBot) WhoAmI(channel, caller, nickname string) {
@@ -150,7 +157,7 @@ func (bot *IrcBot) ListRoles(channel, caller string) {
 
 	roles := bot.state.GetRoles()
 
-	roles = append(roles, bot.plugins.GetRoles()...)
+	// roles = append(roles, bot.plugins.GetRoles()...)
 
 	if len(roles) > 0 {
 		formattedRoles = strings.Join(roles, ", ")

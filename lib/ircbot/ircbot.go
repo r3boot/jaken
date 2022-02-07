@@ -4,8 +4,9 @@ import (
 	"crypto/tls"
 	"fmt"
 	ircevent "github.com/thoj/go-ircevent"
+	"jaken/lib/broker"
+	"jaken/lib/common"
 	"jaken/lib/ircstate"
-	"jaken/lib/pluginmgr"
 	"regexp"
 	"strings"
 )
@@ -28,22 +29,26 @@ const (
 )
 
 type Params struct {
-	Server        string
-	UseTLS        bool
-	VerifyTLS     bool
-	Channel       string
-	Nickname      string
-	Realname      string
-	CommandPrefix string
-	Owner         string
+	Server            string
+	UseTLS            bool
+	VerifyTLS         bool
+	Channel           string
+	Nickname          string
+	Realname          string
+	CommandPrefix     string
+	Owner             string
+	UnfilteredChannel chan common.ToMessage
+	CommandChannel    chan common.ToMessage
 }
 
 type IrcBot struct {
-	conn    *ircevent.Connection
-	params  *Params
-	state   *ircstate.State
-	plugins *pluginmgr.PluginManager
-	builtIn []string
+	conn              *ircevent.Connection
+	params            *Params
+	state             *ircstate.State
+	mqtt              *broker.Mqtt
+	builtIn           []string
+	unfilteredChannel chan common.ToMessage
+	commandChannel    chan common.ToMessage
 }
 
 var (
@@ -51,16 +56,18 @@ var (
 	reValidParams = regexp.MustCompile("^[a-zA-Z0-9_\\-\\+\\ ]+$")
 )
 
-func New(params *Params, state *ircstate.State, plugins *pluginmgr.PluginManager) (*IrcBot, error) {
+func New(params *Params, state *ircstate.State, mqtt *broker.Mqtt) (*IrcBot, error) {
 	ircBot := &IrcBot{
-		conn:    ircevent.IRC(params.Nickname, params.Realname),
-		params:  params,
-		state:   state,
-		plugins: plugins,
+		conn:              ircevent.IRC(params.Nickname, params.Realname),
+		params:            params,
+		state:             state,
+		mqtt:              mqtt,
+		unfilteredChannel: params.UnfilteredChannel,
+		commandChannel:    params.CommandChannel,
 	}
 
-	ircBot.conn.VerboseCallbackHandler = true
-	ircBot.conn.Debug = true
+	ircBot.conn.VerboseCallbackHandler = false
+	ircBot.conn.Debug = false
 	ircBot.conn.UseTLS = params.UseTLS
 	ircBot.conn.TLSConfig = &tls.Config{
 		ServerName:         strings.Split(params.Server, ":")[0],
@@ -91,6 +98,14 @@ func (bot *IrcBot) PrivMsg(e *ircevent.Event) {
 	source := e.Source
 	channel := e.Arguments[0]
 	line := e.Arguments[1]
+
+	// Submit line into feed topic
+	bot.unfilteredChannel <- common.ToMessage{
+		Channel:  channel,
+		Hostmask: source,
+		Nickname: nickname,
+		Message:  line,
+	}
 
 	// Check if we are dealing with a command
 	if !strings.HasPrefix(line, bot.params.CommandPrefix) {
@@ -142,6 +157,6 @@ func (bot *IrcBot) PrivMsg(e *ircevent.Event) {
 	case cmdListPerms:
 		bot.ListPerms(channel, source, params)
 	default:
-		bot.RunPlugin(channel, source, nickname, command, params)
+		bot.SubmitCommand(channel, source, nickname, line)
 	}
 }
