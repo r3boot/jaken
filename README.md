@@ -1,7 +1,16 @@
 # Design principles
-This bot is based on the premise of a loosely coupling between the bot and its plugins, so that plugin development can
-be made more easily. It does this by assuming that plugins are standalone binaries that can be executed. The second
-premise is that there needs to be a fine-grained ACL mechanism. This is done with roles applied to plugins.
+This bot is based on a couple of different design criteriums:
+* There needs to be a loose coupling between the bot and the plugins
+* Fine-grained ACLs up to the command level need to be possible
+
+## Loose coupling
+Loose coupling of the bot will allow rapid plugin development without involving the bot. Furthermore, since the bots
+do not depend on any IRC semantics, it is possible to run the bot outside of the context of the bot. This is implemented
+by adding mqtt in between.
+
+## Fine-grained ACLs
+In order to implement some form of access-control, ACLs need to be in place. This need to be on the hostmask/command
+granularity, using roles, principals and subjects.
 
 # Configuration
 The configuration settings for this bot can be set in three different ways: commandline arguments, environment variables
@@ -69,24 +78,20 @@ Revokes a permission from a user. Syntax is `del-perm <nickname> <role>`.
 List all roles for a user. Syntax is `list-perms [<nickname>]`. By default the permissions for the calling user will
 be shown. By specifying `<nickname>` you can lookup the permissions for another user.
 
+# Mqtt topics
+Several topics are available for communication to/from the bot, as can be seen in the table below. Examples for how to
+use this can be found underneath the `plugins` directory,
+
+| topic                                   |direction| description                                    |
+|-----------------------------------------|---------|------------------------------------------------|
+| from/irc/(channel)/(nickname)/message   |towards plugin| Raw feed of messages in (channel)              |
+| from/irc/(channel)/(nickname)/(command) |towards plugin| Listen in a channel for (ControlChar)(command) |
+| to/irc/(channel)/privmsg                |towards bot| Send reply in (channel) via PRIVMSG            |
+| to/irc/(channel)/notice                 |towards bot| Send reply in (channel) via NOTICE             |
+| to/irc/(channel)/topic                  |towards bot| Sets TOPIC for (channel)                       |
+
 # Plugin development guidelines
-Plugins should be designed such that they can both run standalone (ie, from the commandline) as well as being able to
-run from inside the bot. The bot will take the filename of the script, minus the extension, to create the IRC command.
-Because of this, the plugins need to adhere to the following rules:
-
-* Filename must be a single word and can optionally have an extension
-* Incoming arguments to the plugins must be set via argv
-* Plugin output goes to stdout
-
-By default, the command is bound to a role with the same name as the command. This can be overridden by prepending the
-filename of the command with `<role name>_`. This role identifier (including the underscore) will be removed from the
-IRC command.
-
-Some contextual information will be passed to the command via environment variables. The following can be used within
-your plugin:
-* IRC_CHANNEL
-* IRC_HOSTMASK
-* IRC_NICKNAME
+Plugins can be written in any language, as long as they communicate via the mqtt topics that are available.
 
 # Upcoming features
 * karma/infoitems, in-bot or not

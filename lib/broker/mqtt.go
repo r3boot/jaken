@@ -110,10 +110,12 @@ func (mqtt *Mqtt) channelReader() {
 				token.Wait()
 			}
 		case msg := <-mqtt.commandChan:
-			channel := strings.Replace(msg.Channel, "#", "", -1)
-			topic := fmt.Sprintf("%s/%s/%s/%s", SubmitTopicPrefix, channel, msg.Nickname, msg.Command)
-			token := mqtt.client.Publish(topic, 0, false, msg.Arguments)
-			token.Wait()
+			{
+				channel := strings.Replace(msg.Channel, "#", "", -1)
+				topic := fmt.Sprintf("%s/%s/%s/%s", SubmitTopicPrefix, channel, msg.Nickname, msg.Command)
+				token := mqtt.client.Publish(topic, 0, false, msg.Arguments)
+				token.Wait()
+			}
 		default:
 			time.Sleep(10 * time.Millisecond)
 		}
