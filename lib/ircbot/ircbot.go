@@ -29,26 +29,32 @@ const (
 )
 
 type Params struct {
-	Server            string
-	UseTLS            bool
-	VerifyTLS         bool
-	Channel           string
-	Nickname          string
-	Realname          string
-	CommandPrefix     string
-	Owner             string
-	UnfilteredChannel chan common.ToMessage
-	CommandChannel    chan common.ToMessage
+	Server         string
+	UseTLS         bool
+	VerifyTLS      bool
+	Channel        string
+	Nickname       string
+	Realname       string
+	CommandPrefix  string
+	Owner          string
+	UnfilteredChan chan common.RawMessage
+	CommandChan    chan common.CommandMessage
+	PrivmsgChan    chan common.FromMessage
+	NoticeChan     chan common.FromMessage
+	TopicChan      chan common.TopicMessage
 }
 
 type IrcBot struct {
-	conn              *ircevent.Connection
-	params            *Params
-	state             *ircstate.State
-	mqtt              *broker.Mqtt
-	builtIn           []string
-	unfilteredChannel chan common.ToMessage
-	commandChannel    chan common.ToMessage
+	conn           *ircevent.Connection
+	params         *Params
+	state          *ircstate.State
+	mqtt           *broker.Mqtt
+	builtIn        []string
+	unfilteredChan chan common.RawMessage
+	commandChan    chan common.CommandMessage
+	privmsgChan    chan common.FromMessage
+	noticeChan     chan common.FromMessage
+	topicChan      chan common.TopicMessage
 }
 
 var (
@@ -58,12 +64,15 @@ var (
 
 func New(params *Params, state *ircstate.State, mqtt *broker.Mqtt) (*IrcBot, error) {
 	ircBot := &IrcBot{
-		conn:              ircevent.IRC(params.Nickname, params.Realname),
-		params:            params,
-		state:             state,
-		mqtt:              mqtt,
-		unfilteredChannel: params.UnfilteredChannel,
-		commandChannel:    params.CommandChannel,
+		conn:           ircevent.IRC(params.Nickname, params.Realname),
+		params:         params,
+		state:          state,
+		mqtt:           mqtt,
+		unfilteredChan: params.UnfilteredChan,
+		commandChan:    params.CommandChan,
+		privmsgChan:    params.PrivmsgChan,
+		noticeChan:     params.NoticeChan,
+		topicChan:      params.TopicChan,
 	}
 
 	ircBot.conn.VerboseCallbackHandler = false
@@ -81,6 +90,9 @@ func New(params *Params, state *ircstate.State, mqtt *broker.Mqtt) (*IrcBot, err
 
 	ircBot.conn.AddCallback("001", func(e *ircevent.Event) { ircBot.conn.Join(params.Channel) })
 	ircBot.conn.AddCallback(PRIVMSG, ircBot.PrivMsg)
+
+	// Listen for replies
+	go ircBot.replyWorker()
 
 	return ircBot, nil
 }
@@ -100,7 +112,7 @@ func (bot *IrcBot) PrivMsg(e *ircevent.Event) {
 	line := e.Arguments[1]
 
 	// Submit line into feed topic
-	bot.unfilteredChannel <- common.ToMessage{
+	bot.unfilteredChan <- common.RawMessage{
 		Channel:  channel,
 		Hostmask: source,
 		Nickname: nickname,
@@ -157,6 +169,6 @@ func (bot *IrcBot) PrivMsg(e *ircevent.Event) {
 	case cmdListPerms:
 		bot.ListPerms(channel, source, params)
 	default:
-		bot.SubmitCommand(channel, source, nickname, line)
+		bot.SubmitCommand(channel, source, nickname, command, params)
 	}
 }

@@ -1,22 +1,21 @@
 package ircbot
 
 import (
-	"fmt"
 	"jaken/lib/common"
 	"strings"
 )
 
-func (bot *IrcBot) SubmitCommand(channel, hostmask, nickname, command string) {
-	msg := common.ToMessage{
-		Channel:  channel,
-		Hostmask: hostmask,
-		Nickname: nickname,
-		Message:  command,
+func (bot *IrcBot) SubmitCommand(channel, hostmask, nickname, command, arguments string) {
+	msg := common.CommandMessage{
+		Channel:   channel,
+		Hostmask:  hostmask,
+		Nickname:  nickname,
+		Command:   command,
+		Arguments: arguments,
 	}
 
 	// Submit message to command topic
-	fmt.Printf("Submit to command topic: %v\n", msg)
-	bot.commandChannel <- msg
+	bot.commandChan <- msg
 }
 
 func (bot *IrcBot) WhoAmI(channel, caller, nickname string) {

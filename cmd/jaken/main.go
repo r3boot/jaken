@@ -39,14 +39,21 @@ func main() {
 		PluginPath:    *flagPluginPath,
 	})
 
-	unfilteredChan := make(chan common.ToMessage, broker.MaxInFlight)
-	commandChan := make(chan common.ToMessage, broker.MaxInFlight)
+	unfilteredChan := make(chan common.RawMessage, broker.MaxInFlight)
+	commandChan := make(chan common.CommandMessage, broker.MaxInFlight)
+
+	privmsgChan := make(chan common.FromMessage, broker.MaxInFlight)
+	noticeChan := make(chan common.FromMessage, broker.MaxInFlight)
+	topicChan := make(chan common.TopicMessage, broker.MaxInFlight)
 
 	mqtt := broker.New(&broker.Params{
 		Server:         "localhost:1883",
 		ClientId:       settings.Nickname,
 		UnfilteredChan: unfilteredChan,
 		CommandChan:    commandChan,
+		PrivmsgChan:    privmsgChan,
+		NoticeChan:     noticeChan,
+		TopicChan:      topicChan,
 	})
 
 	state, err := ircstate.New(settings.DbPath)
@@ -56,16 +63,19 @@ func main() {
 	}
 
 	bot, err := ircbot.New(&ircbot.Params{
-		Server:            settings.Server,
-		UseTLS:            settings.UseTls,
-		VerifyTLS:         settings.VerifyTls,
-		Channel:           settings.Channel,
-		Nickname:          settings.Nickname,
-		Realname:          settings.Realname,
-		CommandPrefix:     settings.CommandPrefix,
-		Owner:             settings.Owner,
-		UnfilteredChannel: unfilteredChan,
-		CommandChannel:    commandChan,
+		Server:         settings.Server,
+		UseTLS:         settings.UseTls,
+		VerifyTLS:      settings.VerifyTls,
+		Channel:        settings.Channel,
+		Nickname:       settings.Nickname,
+		Realname:       settings.Realname,
+		CommandPrefix:  settings.CommandPrefix,
+		Owner:          settings.Owner,
+		UnfilteredChan: unfilteredChan,
+		CommandChan:    commandChan,
+		PrivmsgChan:    privmsgChan,
+		NoticeChan:     noticeChan,
+		TopicChan:      topicChan,
 	}, state, mqtt)
 	if err != nil {
 		panic(err)

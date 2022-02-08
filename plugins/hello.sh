@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 
-INPUT="${@}"
+COMMAND_NAME='hello'
 
-if [[ -z "${INPUT}" ]]; then
-  echo "Hi there! :)"
-else
-  echo "Hi ${INPUT}"
-fi
+mosquitto_sub -h localhost -v -t "from/irc/+/+/${COMMAND_NAME}" | while read ARGS;
+  do echo "${ARGS}";
+done
