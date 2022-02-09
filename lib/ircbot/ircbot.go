@@ -14,18 +14,24 @@ import (
 const (
 	PRIVMSG = "PRIVMSG"
 
-	cmdWhoAmI     = "whoami"
-	cmdMeet       = "meet"
-	cmdForget     = "forget"
-	cmdTest       = "test"
-	cmdHelp       = "help"
-	cmdCommands   = "commands"
-	cmdAddRole    = "add-role"
-	cmdRemoveRole = "del-role"
-	cmdListRoles  = "list-roles"
-	cmdAddPerm    = "add-perm"
-	cmdDelPerm    = "del-perm"
-	cmdListPerms  = "list-perms"
+	cmdWhoAmI       = "whoami"
+	cmdMeet         = "meet"
+	cmdForget       = "forget"
+	cmdTest         = "test"
+	cmdHelp         = "help"
+	cmdCommands     = "commands"
+	cmdAddRole      = "add-role"
+	cmdRemoveRole   = "del-role"
+	cmdListRoles    = "list-roles"
+	cmdAddPerm      = "add-perm"
+	cmdDelPerm      = "del-perm"
+	cmdListPerms    = "list-perms"
+	cmdAddBinding   = "add-binding"
+	cmdDelBinding   = "del-binding"
+	cmdListBindings = "list-bindings"
+
+	adminRoleName  = "admin"
+	memberRoleName = "member"
 )
 
 type Params struct {
@@ -168,6 +174,12 @@ func (bot *IrcBot) PrivMsg(e *ircevent.Event) {
 		bot.DeletePerm(channel, source, params)
 	case cmdListPerms:
 		bot.ListPerms(channel, source, params)
+	case cmdAddBinding:
+		bot.AddBinding(channel, source, params)
+	case cmdDelBinding:
+		bot.DeleteBinding(channel, source, params)
+	case cmdListBindings:
+		bot.ListBindings(channel, source, params)
 	default:
 		bot.SubmitCommand(channel, source, nickname, command, params)
 	}

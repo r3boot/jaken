@@ -12,6 +12,9 @@ var (
 		cmdAddPerm,
 		cmdDelPerm,
 		cmdListPerms,
+		cmdAddBinding,
+		cmdDelBinding,
+		cmdListBindings,
 	}
 	alwaysCommands = []string{
 		cmdHelp,
@@ -26,15 +29,26 @@ func (bot *IrcBot) IsOwner(hostmask string) bool {
 }
 
 func (bot *IrcBot) IsAuthorized(hostmask, command string) bool {
-	// The owner is allowed to run all commands
-	if bot.IsOwner(hostmask) {
-		fmt.Printf("Allowed %s for %s: owner\n", command, hostmask)
-		return true
-	}
+
+	/*
+		// The owner is allowed to run all commands
+		if bot.IsOwner(hostmask) {
+			fmt.Printf("Allowed %s for %s: owner\n", command, hostmask)
+			return true
+		}
+
+	*/
 
 	role := bot.state.GetBindingRole(command)
 	if role == "" {
-		return false
+		// If we cannot find a binding, set it to the default one
+		fmt.Printf("No role found for %s, using %s\n", command, memberRoleName)
+		role = memberRoleName
+	}
+
+	if role == adminRoleName {
+		fmt.Printf("Allowed %s for %s: admin\n", command, hostmask)
+		return true
 	}
 
 	nickname := bot.state.GetNicknameForHostmask(hostmask)
@@ -51,7 +65,7 @@ func (bot *IrcBot) IsAuthorized(hostmask, command string) bool {
 	}
 
 	// Disallow by default
-	fmt.Printf("Denied %s to %s: unknown error", command, hostmask)
+	fmt.Printf("Denied %s to %s: unknown error\n", command, hostmask)
 	return false
 }
 

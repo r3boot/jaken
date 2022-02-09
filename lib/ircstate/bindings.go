@@ -118,3 +118,42 @@ func (s *State) RemoveBinding(command, role string) {
 		}
 	}
 }
+
+func (s *State) GetBindingsForRole(role string) []string {
+	var (
+		bindings []string
+	)
+
+	roleId := s.GetRoleRowId(role)
+	if roleId == -1 {
+		return nil
+	}
+
+	sql := "SELECT command FROM bindings WHERE role_id = ?"
+
+	statement, err := s.db.Prepare(sql)
+	if err != nil {
+		log.Fatalf("db.Prepare: %v", err)
+	}
+	defer statement.Close()
+
+	rows, err := statement.Query(&roleId)
+	for rows.Next() {
+		var command string
+		innerErr := rows.Scan(&command)
+		if innerErr != nil {
+			log.Fatalf("rows.Scan: %v", err)
+		}
+		bindings = append(bindings, command)
+	}
+	switch {
+	case err == nil:
+		return bindings
+	case err.Error() == "sql: no rows in result set":
+		return nil
+	case err != nil:
+		log.Fatalf("statement.QueryRow: %v", err)
+	}
+
+	return nil
+}

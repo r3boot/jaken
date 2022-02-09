@@ -6,6 +6,11 @@ import (
 )
 
 func (bot *IrcBot) SubmitCommand(channel, hostmask, nickname, command, arguments string) {
+	if !bot.IsAuthorized(hostmask, command) {
+		bot.conn.Privmsgf(channel, "Not authorized to run command")
+		return
+	}
+
 	msg := common.CommandMessage{
 		Channel:   channel,
 		Hostmask:  hostmask,
@@ -27,7 +32,7 @@ func (bot *IrcBot) WhoAmI(channel, caller, nickname string) {
 }
 
 func (bot *IrcBot) Test(channel, caller, nickname string) {
-	if !bot.IsAuthorized(caller, "test") {
+	if !bot.IsAuthorized(caller, "allow") {
 		bot.conn.Privmsgf(channel, "Not authorized to run command")
 		return
 	}
@@ -36,7 +41,7 @@ func (bot *IrcBot) Test(channel, caller, nickname string) {
 }
 
 func (bot *IrcBot) Help(channel, caller string) {
-	if !bot.IsAuthorized(caller, "help") {
+	if !bot.IsAuthorized(caller, "allow") {
 		bot.conn.Privmsgf(channel, "Not authorized to run command")
 		return
 	}
@@ -45,7 +50,7 @@ func (bot *IrcBot) Help(channel, caller string) {
 }
 
 func (bot *IrcBot) Commands(channel, caller string) {
-	if !bot.IsAuthorized(caller, "commands") {
+	if !bot.IsAuthorized(caller, "allow") {
 		bot.conn.Privmsgf(channel, "Not authorized to run command")
 		return
 	}
@@ -56,7 +61,7 @@ func (bot *IrcBot) Commands(channel, caller string) {
 }
 
 func (bot *IrcBot) Meet(channel, caller, nickname string) {
-	if !bot.IsAuthorized(caller, "meet") {
+	if !bot.IsAuthorized(caller, "users") {
 		bot.conn.Privmsgf(channel, "Not authorized to run command")
 		return
 	}
@@ -72,11 +77,13 @@ func (bot *IrcBot) Meet(channel, caller, nickname string) {
 
 	bot.AddHostmaskFor(nickname)
 
+	bot.state.AddPermission(nickname, memberRoleName)
+
 	bot.conn.Privmsgf(channel, "Pleased to meet you %s", nickname)
 }
 
 func (bot *IrcBot) Forget(channel, caller, nickname string) {
-	if !bot.IsAuthorized(caller, "forget") {
+	if !bot.IsAuthorized(caller, "users") {
 		bot.conn.Privmsgf(channel, "Not authorized to run command")
 		return
 	}
@@ -97,7 +104,7 @@ func (bot *IrcBot) Forget(channel, caller, nickname string) {
 }
 
 func (bot *IrcBot) AddRole(channel, caller, role string) {
-	if !bot.IsAuthorized(caller, "role") {
+	if !bot.IsAuthorized(caller, "rbac") {
 		bot.conn.Privmsgf(channel, "Not authorized to run command")
 		return
 	}
@@ -122,7 +129,7 @@ func (bot *IrcBot) AddRole(channel, caller, role string) {
 }
 
 func (bot *IrcBot) RemoveRole(channel, caller, role string) {
-	if !bot.IsAuthorized(caller, "role") {
+	if !bot.IsAuthorized(caller, "rbac") {
 		bot.conn.Privmsgf(channel, "Not authorized to run command")
 		return
 	}
@@ -147,7 +154,7 @@ func (bot *IrcBot) RemoveRole(channel, caller, role string) {
 }
 
 func (bot *IrcBot) ListRoles(channel, caller string) {
-	if !bot.IsAuthorized(caller, "role") {
+	if !bot.IsAuthorized(caller, "rbac") {
 		bot.conn.Privmsgf(channel, "Not authorized to run command")
 		return
 	}
@@ -155,8 +162,6 @@ func (bot *IrcBot) ListRoles(channel, caller string) {
 	formattedRoles := ""
 
 	roles := bot.state.GetRoles()
-
-	// roles = append(roles, bot.plugins.GetRoles()...)
 
 	if len(roles) > 0 {
 		formattedRoles = strings.Join(roles, ", ")
@@ -167,7 +172,7 @@ func (bot *IrcBot) ListRoles(channel, caller string) {
 }
 
 func (bot *IrcBot) AddPerm(channel, caller, params string) {
-	if !bot.IsAuthorized(caller, "perm") {
+	if !bot.IsAuthorized(caller, "rbac") {
 		bot.conn.Privmsgf(channel, "Not authorized to run command")
 		return
 	}
@@ -212,7 +217,7 @@ func (bot *IrcBot) AddPerm(channel, caller, params string) {
 }
 
 func (bot *IrcBot) DeletePerm(channel, caller, params string) {
-	if !bot.IsAuthorized(caller, "perm") {
+	if !bot.IsAuthorized(caller, "rbac") {
 		bot.conn.Privmsgf(channel, "Not authorized to run command")
 		return
 	}
@@ -257,7 +262,7 @@ func (bot *IrcBot) DeletePerm(channel, caller, params string) {
 }
 
 func (bot *IrcBot) ListPerms(channel, caller, params string) {
-	if !bot.IsAuthorized(caller, "perm") {
+	if !bot.IsAuthorized(caller, "rbac") {
 		bot.conn.Privmsgf(channel, "Not authorized to run command")
 		return
 	}
@@ -276,5 +281,109 @@ func (bot *IrcBot) ListPerms(channel, caller, params string) {
 		bot.conn.Privmsgf(channel, strings.Join(perms, ", "))
 	} else {
 		bot.conn.Privmsgf(channel, "No permissions defined for nickname")
+	}
+}
+
+func (bot *IrcBot) AddBinding(channel, caller, params string) {
+	if !bot.IsAuthorized(caller, "rbac") {
+		bot.conn.Privmsgf(channel, "Not authorized to run command")
+		return
+	}
+
+	if params == "" || strings.Count(params, " ") != 1 {
+		bot.conn.Privmsgf(channel, "Usage: %s <command> <role>", cmdAddBinding)
+		return
+	}
+
+	tokens := strings.Split(params, " ")
+
+	if !bot.IsValidString(tokens[0]) {
+		bot.conn.Privmsgf(channel, "command is not valid")
+		return
+	}
+	command := tokens[0]
+
+	if !bot.IsValidString(tokens[1]) {
+		bot.conn.Privmsgf(channel, "Role is not valid")
+		return
+	}
+	role := tokens[1]
+
+	if !bot.state.HasRole(role) {
+		bot.conn.Privmsgf(channel, "Role does not exist")
+		return
+	}
+
+	if bot.state.HasBinding(command, role) {
+		bot.conn.Privmsgf(channel, "Binding does not exist")
+		return
+	}
+
+	// Errors can be safely ignored
+	bot.state.AddBinding(command, role)
+	bot.conn.Privmsgf(channel, "Bound %s to %s", command, role)
+}
+
+func (bot *IrcBot) DeleteBinding(channel, caller, params string) {
+	if !bot.IsAuthorized(caller, "rbac") {
+		bot.conn.Privmsgf(channel, "Not authorized to run command")
+		return
+	}
+
+	if params == "" || strings.Count(params, " ") != 1 {
+		bot.conn.Privmsgf(channel, "Usage: %s <command> <role>", cmdDelPerm)
+		return
+	}
+
+	tokens := strings.Split(params, " ")
+
+	if !bot.IsValidString(tokens[0]) {
+		bot.conn.Privmsgf(channel, "Command is not valid")
+		return
+	}
+	command := tokens[0]
+
+	if !bot.IsValidString(tokens[1]) {
+		bot.conn.Privmsgf(channel, "Role is not valid")
+		return
+	}
+	role := tokens[1]
+
+	if !bot.state.HasRole(role) {
+		bot.conn.Privmsgf(channel, "Role does not exist")
+		return
+	}
+
+	if !bot.state.HasBinding(command, role) {
+		bot.conn.Privmsgf(channel, "Binding does not exist")
+		return
+	}
+
+	// Errors can be safely ignored
+	bot.state.RemoveBinding(command, role)
+	bot.conn.Privmsgf(channel, "Removed %s from %s", role, command)
+}
+
+func (bot *IrcBot) ListBindings(channel, caller, role string) {
+	if !bot.IsAuthorized(caller, "rbac") {
+		bot.conn.Privmsgf(channel, "Not authorized to run command")
+		return
+	}
+
+	if role == "" {
+		bot.conn.Privmsgf(channel, "Usage: %s <role>", cmdListBindings)
+		return
+	}
+
+	if !bot.state.HasRole(role) {
+		bot.conn.Privmsgf(channel, "Role does not exist")
+		return
+	}
+
+	bindings := bot.state.GetBindingsForRole(role)
+	if len(bindings) > 0 {
+		bot.conn.Privmsgf(channel, strings.Join(bindings, ", "))
+	} else {
+		bot.conn.Privmsgf(channel, "No bindings defined for %s", role)
 	}
 }
