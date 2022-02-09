@@ -39,44 +39,20 @@ management commands are bound to this role.
 # Built-in commands
 In order to make the bot work, it includes several commands by itself, a list of these can be found below
 
-## whoami
-Display how you are recognized by the bot. Syntax is `whoami`.
-
-## test
-Test if you can talk with the bot. Syntax is `test`.
-
-## help
-Get some info to get you started. Syntax is `help`.
-
-## commands
-List all commands that are available to you. Syntax is `help`. Note that you will only see commands which you have
-access to.
-
-## meet
-Introduce a new user to the bot. Syntax is `meet <nickname>`. This will cause the bot to perform a whois lookup for this
-user, and store the corresponding hostmask into the database.
-
-## forget
-Remove a user from the bot. Syntax is `forget <nickname>`. This will delete all hostmasks of users matching the nickname.
-
-## add-role
-Define a new role. Syntax is `add-role <role>`.
-
-## del-role
-Remove a role. Syntax is `del-role <role>`.
-
-## list-roles
-List all available roles. Syntax is `list-roles`.
-
-## add-perm
-Grants a user permission to a role. Syntax is `add-perm <nickname> <role>`.
-
-## del-perm
-Revokes a permission from a user. Syntax is `del-perm <nickname> <role>`.
-
-## list-perms
-List all roles for a user. Syntax is `list-perms [<nickname>]`. By default the permissions for the calling user will
-be shown. By specifying `<nickname>` you can lookup the permissions for another user.
+|command|role|description|
+|-------|----|-----------|
+|whoami|member|Display how you are recognized by the bot|
+|test|member|Test if you can talk with the bot|
+|help|member|Get some info to get you started|
+|commands|member|List all commands that are available to you|
+|meet|admin|Introduce a new user to the bot. This will cause the bot to perform a whois lookup for this user, and store the corresponding hostmask into the database|
+|forget|admin|Remove a user from the bot. This will delete all hostmasks of users matching the nickname|
+|add-role|admin|Define a new role|
+|del-role|admin|Remove a role|
+|list-roles|admin|List all available roles|
+|add-perm|admin|Grants a user permission to a role|
+|del-perm|admin|Revokes a permission from a user|
+|list-perms|admin|List all roles for a user. By default the permissions for the calling user will be shown. By specifying `<nickname>` you can lookup the permissions for another user.|
 
 # Mqtt topics
 Several topics are available for communication to/from the bot, as can be seen in the table below. Examples for how to
@@ -94,13 +70,7 @@ use this can be found underneath the `plugins` directory,
 Plugins can be written in any language, as long as they communicate via the mqtt topics that are available.
 
 # Upcoming features
-* karma/infoitems, in-bot or not
-* Possibility to reply using notifications
 * Port some plugins
 * Alias support
-* Endpoint for incoming irc messages
-* Make bot configurable via cfg file and cli arguments
-* Find something for triggers (eg, !remind, leaving messages for ppl)
-* Possibility to create plugins which run continuously and communicate via stdin/stdout
 * sqlite3 -> add transactions and concurrency limits
 * Possibility to join multiple channels
